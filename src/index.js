@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const movieData = await response.json();
             renderMovieDetails(movieData);
         } catch (error) {
-            console.error('Error fetching movie details:', error);
         }
     };
 
@@ -23,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Create span element to hold movie title
             const titleSpan = document.createElement('span');
             titleSpan.textContent = movie.title;
+            // Add click event listener to each movie title
+            titleSpan.addEventListener('click', () => {
+                fetchAndRenderMovieDetails(movie.id);
+            });
             listItem.appendChild(titleSpan);
 
             // Create delete button
@@ -43,11 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             listItem.appendChild(deleteButton);
-
-            // Add click event listener to each list item to fetch and render movie details
-            listItem.addEventListener('click', () => {
-                fetchAndRenderMovieDetails(movie.id);
-            });
 
             // Add the list item to the filmsList
             filmsList.appendChild(listItem);
@@ -77,8 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const movieData = await response.json();
             renderMovieDetails(movieData);
+
+            // Update buy bar with selected movie's information
+            document.getElementById('selected-movie-title').textContent = movieData.title;
+            document.getElementById('selected-movie-poster').src = movieData.poster;
         } catch (error) {
-            console.error('Error fetching movie details:', error);
         }
     };
 
@@ -119,8 +120,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Fetch first movie details when the page loads
-    fetchFirstMovieDetails();
     // Fetch all movies and render their titles in the menu
     fetchAllMovies();
+    // Fetch first movie details when the page loads
+    fetchFirstMovieDetails();
+
+    // Event listener to add movie titles
+    document.getElementById('title').addEventListener('click', async () => {
+        try {
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                throw new Error('Please enter a movie title');
+            }
+
+            const response = await fetch('http://localhost:3000/films', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: title })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to add movie');
+            }
+
+            fetchAllMovies(); // Reload movies after adding a new one
+            document.getElementById('movie-title').value = '';
+        } catch (error) {
+            console.error('Error adding movie:', error);
+        }
+    });
 });
